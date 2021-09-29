@@ -22,28 +22,8 @@ impl EjaniInstance {
 
     pub fn run(self) -> io::Result<()>{
 
-        //gathering paths. What this statement does is remove all the paths that might error (idk why but better safe than sorry)
-        //then it filters all the files that don't end in .mkv (I only support this right now)
-        //and then collect all those files
-        let mut anime_paths: Vec<_> = fs::read_dir(self.path_to_anime)?
-                                                                .into_iter()
-                                                                .filter(|r| r.is_ok())
-                                                                .map(|r| r.unwrap())
-                                                                //this line is fucky, it's a horrible way to filter the path to only .mkv files
-                                                                .filter_map(|r| r.path().to_str().and_then(|f| if f.ends_with(".mkv") { Some(r) } else { None } ))
-                                                                .collect();
-        //alphabetizes the path
-        anime_paths.sort_by_key(|dir| dir.path());
-
-
-        //see above, but I filter all but .srt and .ass (haha ass)
-        let mut sub_paths: Vec<_> = fs::read_dir(self.path_to_subs)?
-                                                                .into_iter()
-                                                                .filter(|r| r.is_ok())
-                                                                .map(|r| r.unwrap())
-                                                                //this line is fucky, it's a horrible way to filter the path to only .mkv files
-                                                                .filter_map(|r| r.path().to_str().and_then(|f| if f.ends_with(".srt") || f.ends_with(".ass") { Some(r) } else { None } ))
-                                                                .collect();
+        let anime_paths = pull_and_alphabetize(self.path_to_anime, ".mkv")?;
+        let mut sub_paths = pull_and_alphabetize(self.path_to_subs, ".srt")?;
 
         sub_paths.sort_by_key(|dir| dir.path());        
 
@@ -80,6 +60,8 @@ impl EjaniInstance {
         let mut tmp = env::temp_dir();
         tmp.push("ejani");
         fs::create_dir_all(&tmp)?;
+
+        fs::create_dir_all(self.output_path.to_string())?;
         
 
         for it in anime_paths.iter().zip(sub_paths.iter()) {
@@ -91,9 +73,8 @@ impl EjaniInstance {
             let vid_name = a_path.file_name().to_str().unwrap().to_string();
             let sub_name = s_path.file_name().to_str().unwrap().to_string();
 
-            //subs are first
             println!("Syncing sub file {} with video {}", sub_name, vid_name);
-            let sub_sync = Command::new("ffs")
+            let __sub_sync = Command::new("ffs")
                                     .arg(vid_file.to_string())
                                     .arg("-i")
                                     .arg(sub_file.to_string())
@@ -105,7 +86,8 @@ impl EjaniInstance {
 
             //ffmpeg -i input.mpv -c copy -map 0 -metadata:s:v:0 language=jpn output.mkv
             println!("Converting {} video track to Japanese", vid_name);
-            let japanese_conversion = Command::new("ffmpeg")
+            let __japanese_conversion = Command::
+                                     new("ffmpeg")
                                     .arg("-y")
                                     .arg("-i")
                                     .arg(vid_file.to_string())
@@ -115,16 +97,16 @@ impl EjaniInstance {
                                     .arg("0")
                                     .arg("-metadata:s:v:0")
                                     .arg("language=jpn")
-                                    .arg(format!(r#"{}/1-{}"#, tmp.to_str().unwrap(), vid_name))
+                                    .arg(format!(r#"{}/temp-1-{}"#, tmp.to_str().unwrap(), vid_name))
                                     .output()
                                     .expect("Fucky wucky in English purge!");
 
             //ffmpeg -i input.mkv -c copy -map 0 -map -0:m:language:eng -sn  output.mkv
             println!("Removing English tracks from {}", vid_name);
-            let english_purge = Command::new("ffmpeg")
-                                    .arg("-y")
+            let __english_purge = Command::
+                                     new("ffmpeg")
                                     .arg("-i")
-                                    .arg(vid_file.to_string())
+                                    .arg(format!(r#"{}/temp-1-{}"#, tmp.to_str().unwrap(), vid_name))
                                     .arg("-c")
                                     .arg("copy")
                                     .arg("-map")
@@ -132,18 +114,55 @@ impl EjaniInstance {
                                     .arg("-map")
                                     .arg("-0:m:language:eng")
                                     .arg("-sn")
-                                    .arg(format!(r#"{}/2-{}"#, tmp.to_str().unwrap(), vid_name));
-                                    //.output()
-                                    //.expect("Fucky wucky in English purge!");
+                                    .arg(format!(r#"{}/temp-2-{}"#, tmp.to_str().unwrap(), vid_name))
+                                    .output()
+                                    .expect("Fucky wucky in English purge!");
+            //to save space we remove the 1st pass through of the ffmpeg
+            fs::remove_file(format!(r#"{}/temp-1-{}"#, tmp.to_str().unwrap(), vid_name))?;
 
-            //println!("{}", String::from_utf8(english_purge.stderr).unwrap());
 
+            //ffmpeg -i input.mkv -sub_charenc 'UTF-8' -f srt -i input.srt -map 0:0 -map 0:1 -map 1:0 -c:v copy -c:a copy -c:s srt out.mkv
+            println!("Adding synced {} to {}", sub_name, vid_name);
+            let __japanese_revolution = Command::
+                                     new("ffmpeg")
+                                    .arg("-i")
+                                    .arg(format!(r#"{}/temp-2-{}"#, tmp.to_str().unwrap(), vid_name))
+                                    .arg("-sub_charenc")
+                                    .arg("'UTF-8'")
+                                    .arg("-f")
+                                    .arg("srt")
+                                    .arg("-i")
+                                    .arg(format!(r#"{}/{}"#, tmp.to_str().unwrap(), sub_name))
+                                    .arg("-map")
+                                    .arg("0:0")
+                                    .arg("-map")
+                                    .arg("0:1")
+                                    .arg("-map")
+                                    .arg("1:0")
+                                    .arg("-c:v")
+                                    .arg("copy")
+                                    .arg("-c:a")
+                                    .arg("copy")
+                                    .arg("-c:s")
+                                    .arg("srt")
+                                    .arg(format!(r#"{}/{}"#, self.output_path, vid_name))
+                                    .output()
+                                    .expect("Fucky wucky in Japanese revolution!");
         }
-
-
-
-        //fs::remove_dir_all(&tmp)?;
-
         Ok(())
     }
+}
+
+//returns a Result, Err if the path is empty
+fn pull_and_alphabetize(path: String, filter: &str) -> Result<std::vec::Vec<std::fs::DirEntry>, std::io::Error> {
+    let mut sub_paths: Vec<_> = fs::read_dir(path)?
+                        .into_iter()
+                        .filter(|r| r.is_ok())
+                        .map(|r| r.unwrap())
+                        //this line is fucky, it's a horrible way to filter the path to only .mkv files
+                        .filter_map(|r| r.path().to_str().and_then(|f| if f.ends_with(&filter) { Some(r) } else { None } ))
+                        .collect();
+
+    sub_paths.sort_by_key(|dir| dir.path());
+    Ok(sub_paths)
 }

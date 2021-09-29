@@ -51,7 +51,7 @@ fn main() {
     }
 
     if ani_path.is_empty() {
-        println!("Anime path wasn't passed. To pass it, use -ia <path_to_anime_folder>");
+        println!("Show path wasn't passed. To pass it, use -ia <path_to_anime_folder>");
         std::process::exit(1);
     }
 
@@ -72,7 +72,9 @@ fn main() {
         sub_path.to_string(), 
         out_path.to_string()
     );
-    e.run();
+    
+    e.run().unwrap();
+    println!("できた！")
 }
 
 fn help() {
