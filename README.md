@@ -8,14 +8,14 @@ Right now, the only language that will work is Japanese, once I get it up and ru
 ## Building
 To build, you need Rust. The build process is simple.
 
-`git clone https://github.com/KrosisBH/EJANI`
-`cd EJANI`
-`cargo build --release`
+`git clone https://github.com/KrosisBH/EJANI`  
+`cd EJANI`  
+`cargo build --release`  
 
 The binary is in /target/release/
 
 There are also two runtime dependencies:
-ffmpeg, which comes with most Linux distributions. On Debian based systems, this is installed `sudo apt install ffmpeg` 
+ffmpeg, which comes with most Linux distributions. On Debian based systems, this is installed `sudo apt install ffmpeg`  
 
 ffsubsync, which you can get here https://github.com/smacke/ffsubsync
 
