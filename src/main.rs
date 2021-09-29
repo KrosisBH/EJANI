@@ -1,3 +1,5 @@
+
+
 use ejani::EjaniInstance;
 use std::env;
 
@@ -82,7 +84,7 @@ fn help() {
 "Ejani: written by krosisbh
 Usage: ejani -ia <path_to_anime_folder> -is <path_to_subtitles> -o <path_to_output>
 
-If you see this sentence, the creator is a fucking retard who hasn't put in a proper help section
+More features to be planned!
 
 "
     );
