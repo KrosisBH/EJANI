@@ -89,7 +89,7 @@ impl EjaniInstance {
             //ffmpeg -i input.mpv -c copy -map 0 -metadata:s:v:0 language=jpn output.mkv
             println!("Converting {} video track to Japanese", vid_name);
             let __japanese_conversion = Command::
-                                     new("ffmpeg")
+                                    new("ffmpeg")
                                     .arg("-y")
                                     .arg("-i")
                                     .arg(vid_file.to_string())
@@ -106,7 +106,7 @@ impl EjaniInstance {
             //ffmpeg -i input.mkv -c copy -map 0 -map -0:m:language:eng -sn  output.mkv
             println!("Removing English tracks from {}", vid_name);
             let __english_purge = Command::
-                                     new("ffmpeg")
+                                    new("ffmpeg")
                                     .arg("-i")
                                     .arg(format!(r#"{}/temp-1-{}"#, tmp.to_str().unwrap(), vid_name))
                                     .arg("-c")
@@ -125,31 +125,51 @@ impl EjaniInstance {
 
             //ffmpeg -i input.mkv -sub_charenc 'UTF-8' -f srt -i input.srt -map 0:0 -map 0:1 -map 1:0 -c:v copy -c:a copy -c:s srt out.mkv
             println!("Adding synced {} to {}", sub_name, vid_name);
-            let __japanese_revolution = Command::
-                                     new("ffmpeg")
-                                    .arg("-i")
-                                    .arg(format!(r#"{}/temp-2-{}"#, tmp.to_str().unwrap(), vid_name))
-                                    .arg("-sub_charenc")
-                                    .arg("'UTF-8'")
-                                    .arg("-f")
-                                    .arg("srt")
-                                    .arg("-i")
-                                    .arg(format!(r#"{}/{}"#, tmp.to_str().unwrap(), sub_name))
-                                    .arg("-map")
-                                    .arg("0:0")
-                                    .arg("-map")
-                                    .arg("0:1")
-                                    .arg("-map")
-                                    .arg("1:0")
-                                    .arg("-c:v")
-                                    .arg("copy")
-                                    .arg("-c:a")
-                                    .arg("copy")
-                                    .arg("-c:s")
-                                    .arg("srt")
-                                    .arg(format!(r#"{}/{}"#, self.output_path, vid_name))
-                                    .output()
-                                    .expect("Fucky wucky in Japanese revolution!");
+            if cfg!(unix) {
+                let __japanese_revolution = Command::
+                new("ffmpeg")
+                .arg("-i")
+                .arg(format!(r#"{}/temp-2-{}"#, tmp.to_str().unwrap(), vid_name))
+                .arg("-sub_charenc")
+                .arg("'UTF-8'")
+                .arg("-f")
+                .arg("srt")
+                .arg("-i")
+                .arg(format!(r#"{}/{}"#, tmp.to_str().unwrap(), sub_name))
+                .arg("-map")
+                .arg("0:0")
+                .arg("-map")
+                .arg("0:1")
+                .arg("-map")
+                .arg("1:0")
+                .arg("-c:v")
+                .arg("copy")
+                .arg("-c:a")
+                .arg("copy")
+                .arg("-c:s")
+                .arg("srt")
+                .arg(format!(r#"{}/{}"#, self.output_path, vid_name))
+                .output()
+                .expect("Fucky wucky in Japanese revolution!");
+            }
+            else if cfg!(windows) {
+                let vid_name_mp4 = str::replace(&vid_name, ".mkv", ".mp4");
+                //ffmpeg -i input.mkv -i subs.srt -c copy -c:s mov_text outfile.mp4 <-- limitation I couldn't figure out, it comes out in mp4.
+
+                let __japanese_revolution = Command::
+                new("ffmpeg")
+                .arg("-i")
+                .arg(format!(r#"{}/temp-2-{}"#, tmp.to_str().unwrap(), vid_name))
+                .arg("-i")
+                .arg(format!(r#"{}/{}"#, tmp.to_str().unwrap(), sub_name))
+                .arg("-c")
+                .arg("copy")
+                .arg("-c:s")
+                .arg("mov_text")
+                .arg(format!(r#"{}/{}"#, self.output_path, vid_name_mp4))
+                .output()
+                .expect("Fucky wucky in Japanese revolution!");
+            }
         }
         Ok(())
     }

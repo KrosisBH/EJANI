@@ -1,7 +1,6 @@
 
-
-use ejani::EjaniInstance;
 use std::env;
+use ejani::EjaniInstance;
 
 
 fn main() {
@@ -51,9 +50,9 @@ fn main() {
             }
         }
     }
-
+    
     if ani_path.is_empty() {
-        println!("Show path wasn't passed. To pass it, use -ia <path_to_anime_folder>");
+        println!("Video path wasn't passed. To pass it, use -ia <path_to_video_folder>");
         std::process::exit(1);
     }
 
@@ -82,7 +81,7 @@ fn main() {
 fn help() {
     println! (
 "Ejani: written by krosisbh
-Usage: ejani -ia <path_to_anime_folder> -is <path_to_subtitles> -o <path_to_output>
+Usage: ejani -ia <path_to_video_folder> -is <path_to_subtitles> -o <path_to_output>
 
 More features to be planned!
 
