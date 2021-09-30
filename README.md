@@ -43,7 +43,9 @@ After this, be sure that the shell you are working in has been restarted so that
 
 `ejani -ia <path_to_show_folder> -is <path_to_subtitles> -o <path_to_output>`
 
-This is only test to work on Linux. I tried to use cross-platform operations, but it remains untested on MacOS, Windows, and BSD systems.
+When on Windows, I like to drop the ejani.exe into the folder I will use the program on, the command reduces to  
+
+`ejani -ia . -is <path_to_subtitles> -o <path_to_output>`
 
 I personally use this with Anki + mpv + https://github.com/Ajatt-Tools/mpvacious, which makes making flashcards off what I watch very trivial
 
