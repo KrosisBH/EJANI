@@ -45,7 +45,7 @@ After this, be sure that the shell you are working in has been restarted so that
 
 When on Windows, I like to drop the ejani.exe into the folder I will use the program on, the command reduces to  
 
-`ejani -ia . -is <path_to_subtitles> -o <path_to_output>`
+`.\ejani -ia . -is <path_to_subtitles> -o <path_to_output>`
 
 I personally use this with Anki + mpv + https://github.com/Ajatt-Tools/mpvacious, which makes making flashcards off what I watch very trivial
 
